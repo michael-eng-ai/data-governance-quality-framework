@@ -1,0 +1,12 @@
+data_governance:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('DBT_HOST', 'localhost') }}"
+      port: "{{ env_var('DBT_PORT', '5432') | int }}"
+      user: "{{ env_var('DBT_USER', 'governance') }}"
+      password: "{{ env_var('DBT_PASSWORD', 'governance') }}"
+      dbname: "{{ env_var('DBT_DBNAME', 'data_governance') }}"
+      schema: public
+      threads: 4

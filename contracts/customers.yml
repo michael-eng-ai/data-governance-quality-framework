@@ -1,0 +1,89 @@
+# Data Contract: Customers Table
+# Owner: Data Engineering Team
+# Purpose: Defines schema, quality rules, and freshness SLA for the customers table.
+
+table_name: customers
+schema_name: public
+owner: data-engineering
+description: "Customer master data table with profile information"
+version: "1.0.0"
+tags:
+  - master-data
+  - core
+  - pii
+
+columns:
+  - name: customer_id
+    type: uuid
+    nullable: false
+    primary_key: true
+    description: "Unique customer identifier"
+
+  - name: email
+    type: string
+    nullable: false
+    description: "Customer email address (unique)"
+
+  - name: first_name
+    type: string
+    nullable: false
+    description: "Customer first name"
+
+  - name: last_name
+    type: string
+    nullable: false
+    description: "Customer last name"
+
+  - name: country
+    type: string
+    nullable: true
+    description: "Customer country of residence (ISO 3166)"
+
+  - name: created_at
+    type: timestamp
+    nullable: false
+    description: "Account creation timestamp"
+
+  - name: updated_at
+    type: timestamp
+    nullable: false
+    description: "Profile last modification timestamp"
+
+quality_rules:
+  - rule_type: not_null
+    column: customer_id
+    severity: error
+    description: "Primary key must never be null"
+
+  - rule_type: unique
+    column: customer_id
+    severity: error
+    description: "Customer IDs must be globally unique"
+
+  - rule_type: unique
+    column: email
+    severity: error
+    description: "Email addresses must be unique across all customers"
+
+  - rule_type: not_null
+    column: email
+    severity: error
+    description: "Email is required for account verification"
+
+  - rule_type: regex_match
+    column: email
+    parameters:
+      pattern: "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+    severity: warning
+    description: "Email should match standard email format"
+
+  - rule_type: row_count_min
+    parameters:
+      min_count: 1
+    severity: warning
+    description: "Table should not be empty"
+
+freshness:
+  timestamp_column: updated_at
+  max_delay_minutes: 1440
+  check_interval_minutes: 60

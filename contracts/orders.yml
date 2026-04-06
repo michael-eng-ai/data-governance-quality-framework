@@ -1,0 +1,105 @@
+# Data Contract: Orders Table
+# Owner: Data Engineering Team
+# Purpose: Defines schema, quality rules, and freshness SLA for the orders table.
+# Changes to this contract should go through PR review.
+
+table_name: orders
+schema_name: public
+owner: data-engineering
+description: "Transactional orders table containing all customer purchases"
+version: "1.0.0"
+tags:
+  - transactional
+  - core
+  - finance
+
+columns:
+  - name: order_id
+    type: uuid
+    nullable: false
+    primary_key: true
+    description: "Unique identifier for each order"
+
+  - name: customer_id
+    type: uuid
+    nullable: false
+    description: "Reference to the customer who placed the order"
+
+  - name: order_date
+    type: date
+    nullable: false
+    description: "Date when the order was placed"
+
+  - name: total_amount
+    type: decimal
+    nullable: false
+    description: "Total monetary value of the order in local currency"
+
+  - name: status
+    type: string
+    nullable: false
+    description: "Current order lifecycle status"
+
+  - name: created_at
+    type: timestamp
+    nullable: false
+    description: "Record creation timestamp"
+
+  - name: updated_at
+    type: timestamp
+    nullable: false
+    description: "Record last modification timestamp"
+
+quality_rules:
+  - rule_type: not_null
+    column: order_id
+    severity: error
+    description: "Primary key must never be null"
+
+  - rule_type: unique
+    column: order_id
+    severity: error
+    description: "Order IDs must be globally unique"
+
+  - rule_type: not_null
+    column: customer_id
+    severity: error
+    description: "Every order must belong to a customer"
+
+  - rule_type: min_value
+    column: total_amount
+    parameters:
+      value: 0
+    severity: error
+    description: "Order amounts must be non-negative"
+
+  - rule_type: accepted_values
+    column: status
+    parameters:
+      values:
+        - pending
+        - processing
+        - completed
+        - cancelled
+        - refunded
+    severity: error
+    description: "Status must be one of the defined lifecycle states"
+
+  - rule_type: row_count_min
+    parameters:
+      min_count: 1
+    severity: warning
+    description: "Table should not be empty"
+
+  - rule_type: referential_integrity
+    column: customer_id
+    parameters:
+      reference_table: customers
+      reference_column: customer_id
+    severity: error
+    description: "All customer_ids must exist in the customers table"
+
+freshness:
+  timestamp_column: updated_at
+  max_delay_minutes: 120
+  check_interval_minutes: 30
